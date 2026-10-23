@@ -12,8 +12,14 @@ and 39 response-header bytes. Expected `upstream_sent`: **171**; `upstream_recei
 Envoy 1.40.0 counts the payload twice in both upstream counters:
 
 ```json
-{"upstream_sent": 271, "upstream_received": 239, "downstream_sent": 100}
+{
+  "upstream_sent": 271,
+  "upstream_received": 239,
+  "downstream_received": 100,
+  "downstream_sent": 100
+}
 ```
 
 The HTTP codec and TCP proxy both add each payload to the same upstream byte meter.
-The downstream counter is correct. All traffic stays on container loopback.
+The downstream counters are correct: `downstream_received` is the payload sent upstream,
+and `downstream_sent` is the payload received from upstream. All traffic stays on container loopback.

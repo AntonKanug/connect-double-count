@@ -56,6 +56,7 @@ static_resources:
                 json_format:
                   upstream_sent: '%UPSTREAM_WIRE_BYTES_SENT%'
                   upstream_received: '%UPSTREAM_WIRE_BYTES_RECEIVED%'
+                  downstream_received: '%DOWNSTREAM_WIRE_BYTES_RECEIVED%'
                   downstream_sent: '%DOWNSTREAM_WIRE_BYTES_SENT%'
   clusters:
   - name: connect
@@ -89,6 +90,7 @@ static_resources:
             envoy.terminate()
             envoy.wait(timeout=5)
     result = json.loads(access.read_text())
+    assert result["downstream_received"] == 100
     assert result["downstream_sent"] == 100
     print(f"Payload: 100 bytes; HTTP response headers: {len(HEADERS)} bytes")
     print(f"Expected upstream_sent: {100 + request_header_size}")
