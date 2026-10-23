@@ -25,6 +25,7 @@ def backend(listener):
         conn.sendall(PAYLOAD)
         conn.shutdown(socket.SHUT_WR)
         assert conn.recv(1) == b""
+        return len(request)
 
 
 print(subprocess.check_output(["envoy", "--version"], text=True).strip())
@@ -53,6 +54,7 @@ static_resources:
               path: {access}
               log_format:
                 json_format:
+                  upstream_sent: '%UPSTREAM_WIRE_BYTES_SENT%'
                   upstream_received: '%UPSTREAM_WIRE_BYTES_RECEIVED%'
                   downstream_sent: '%DOWNSTREAM_WIRE_BYTES_SENT%'
   clusters:
@@ -82,12 +84,13 @@ static_resources:
                 client.sendall(PAYLOAD)
                 assert client.recv(100, socket.MSG_WAITALL) == PAYLOAD
                 assert client.recv(1) == b""
-            serving.result(timeout=5)
+            request_header_size = serving.result(timeout=5)
         finally:
             envoy.terminate()
             envoy.wait(timeout=5)
     result = json.loads(access.read_text())
     assert result["downstream_sent"] == 100
     print(f"Payload: 100 bytes; HTTP response headers: {len(HEADERS)} bytes")
+    print(f"Expected upstream_sent: {100 + request_header_size}")
     print(f"Expected upstream_received: {100 + len(HEADERS)}")
     print(json.dumps(result, indent=2))
